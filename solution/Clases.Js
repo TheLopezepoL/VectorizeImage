@@ -4,7 +4,18 @@ imageInformation.width = 0;
 imageInformation.height = 0;
 imageInformation.pixels = [];
 
+/**
+ * @class Vertex
+ * @typedef {Vertex}
+ */
 class Vertex {
+    /**
+     * Creates an instance of Vertex.
+     *
+     * @constructor
+     * @param {number} x
+     * @param {number} y
+     */
     constructor(x, y) {
         this.x = x;
         this.y = y;
@@ -15,6 +26,11 @@ class Vertex {
         this.y = y;
     }
 
+    /**
+     * Return true if a vertex is in a black pixel in the paint
+     *
+     * @returns {boolean}
+     */
     isInBlack() {
         if (imageInformation.pixels[this.y][this.x] === 0) {
             return true;
@@ -23,23 +39,42 @@ class Vertex {
     }
 }
 
+/**
+ * @class Line
+ * @typedef {Line}
+ */
 class Line {
     // Cuanto puede variar el grosor y el angulo de las lineas
     static ticknesRange = [0, 0];
     static ticknessVariation = 0;
     static vertexMovement = 0;
 
+    /**
+     * Creates an instance of Line.
+     *
+     * @constructor
+     * @param {Vertex} vertexA
+     * @param {Vertex} vertexB
+     */
     constructor(vertexA, vertexB) {
         this.vertexA = vertexA;
         this.vertexB = vertexB;
         this.tickness = setRandomTickness();
     }
 
+    /**
+     * Value between tickness range
+     *
+     * @returns {number}
+     */
     setRandomTickness() {
         const range = Individual.ticknesRange[1] - Individual.ticknesRange[0];
         return (Math.random() * range) + Individual.ticknesRange[0];
     }
 
+    /**
+     * Change the tickness randomly
+     */
     mutateTickness() {
         // Opcional
         const range = this.tickness * (Line.ticknessVariation / 100);
@@ -52,6 +87,11 @@ class Line {
         // Opcional
     }
 
+    /**
+     * Returns the euclidian distance between the 2 vertex of the line
+     *
+     * @returns {number}
+     */
     getDistance() {
         // Distancia euclidiana
         const distanceX = this.vertexA.x - this.vertexB.x;
@@ -59,6 +99,11 @@ class Line {
         return Math.sqrt(distanceX ** 2 + distanceY ** 2);
     }
 
+    /**
+     * Create a Vertex from the midle of the line
+     *
+     * @returns {Vertex}
+     */
     getMiddlePoint() {
         // Punto medio de la linea
         const x = Math.round((this.vertexA.x + this.vertexB.x) / 2);
@@ -79,17 +124,30 @@ class Line {
     }
 }
 
+/**
+ * @class Individual
+ * @typedef {Individual}
+ */
 class Individual {
     // Rango de distancia entre puntos para hacer la linea
     static distanceRange = [0, 0];
     static quantLinesVariation = 0;
 
+    /**
+     * Creates an instance of Individual.
+     *
+     * @constructor
+     * @param {number} quantLines
+     */
     constructor(quantLines) {
         this.quantLines = quantLines;
         this.lines = [];
         this.fitness = 0;
     }
 
+    /**
+     * Fill the lines array with random lines
+     */
     randomLines() {
         // Crea lineas aleatorias
         for (let i = 0; i < this.quantLines; i++) {
@@ -97,6 +155,11 @@ class Individual {
         }
     }
 
+    /**
+     * Create a random Line
+     *
+     * @returns {Line}
+     */
     randomLine() {
         // Crear un primer punto
         const x = Math.floor(Math.random() * imageInformation.width);
@@ -121,6 +184,12 @@ class Individual {
         return new Line(vertex1, vertex2);
     }
 
+    /**
+     * Fill lines array from the genes of the parents
+     *
+     * @param {Individual} parentA
+     * @param {Individual} parentB
+     */
     crossover(parentA, parentB) {
         const linesPriority = Math.round(this.quantLines * 65 / 100);
         const linesFromA = parentA.lines.slice(0, linesPriority);
@@ -129,6 +198,9 @@ class Individual {
         this.lines.concat(linesFromB);
     }
 
+    /**
+     * Change the number of individual's lines
+     */
     mutateLines() {
         // Opcional
         const range = this.quantLines * (Individual.quantLinesVariation / 100);
@@ -145,6 +217,9 @@ class Individual {
         this.quantLines = this.lines.length;
     }
 
+    /**
+     * Set a number between 0 and 1 of the % of correctness of the Individual
+     */
     calculateFitness() {
         // Por definir - Este fitness es modificable
         let actualFitness = 0;
@@ -177,6 +252,10 @@ class Individual {
     }
 }
 
+/**
+ * @class Generation
+ * @typedef {Generation}
+ */
 class Generation {
     // Porcentajes y Rangos que comparten todas las generaciones
     static populationPerGen = 0;
@@ -187,6 +266,12 @@ class Generation {
     // Tiempo total del algoritmo
     static totalTime = 0;
     
+    /**
+     * Creates an instance of Generation.
+     *
+     * @constructor
+     * @param {number} id
+     */
     constructor(id) {
         this.id = id;
         this.genTime = 0;
@@ -297,6 +382,23 @@ class VectorizeImage {
         imageInformation.pixels = pixels;
     }
 
+    setPercentages(selection, crossover, mutate) {
+        Generation.setSelectionPerGen(selection);
+        Generation.setCrossoverPercentage(crossover);
+        Generation.setMutatePercentage(mutate);
+    }
+
+    setMaxGenerationsAndPopulation(generation, population) {
+        this.maxGenerations = generation;
+        Generation.setPopulationPerGen(population);
+    }
+
+    setRanges(quantLines, distance, tickness) {
+        Generation.setQuantLinesRange(quantLines);
+        Individual.setDistanceRange(distance);
+        Line.setTicknessRange(tickness);
+    }
+
     vectorize() {
         // Primera generacion
         // Tomar tiempo
@@ -327,6 +429,7 @@ class VectorizeImage {
 
     hasConverged() {
         // Por definir
+        // Aca creo que si habria que hacer una compracion de pixeles negros vs pixeles cubiertos por nuestras lineas.
         return false;
     }
 

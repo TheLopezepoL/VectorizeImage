@@ -6,7 +6,6 @@ imageInformation.pixels = [];
 
 /**
  * @class Vertex
- * @typedef {Vertex}
  */
 class Vertex {
     /**
@@ -17,10 +16,18 @@ class Vertex {
      * @param {number} y
      */
     constructor(x, y) {
+        /** @type {number} */
         this.x = x;
+        /** @type {number} */
         this.y = y;
     }
 
+    /**
+     *  Change Vertex location
+     *
+     * @param x {number}
+     * @param y {number}
+     */
     setCoordinates(x, y) {
         this.x = x;
         this.y = y;
@@ -32,20 +39,18 @@ class Vertex {
      * @returns {boolean}
      */
     isInBlack() {
-        if (imageInformation.pixels[this.y][this.x] === 0) {
-            return true;
-        }
-        return false;
+        return imageInformation.pixels[this.y][this.x] === 0;
     }
 }
 
 /**
  * @class Line
- * @typedef {Line}
  */
 class Line {
     // Cuanto puede variar el grosor y el angulo de las lineas
-    static ticknesRange = [0, 0];
+    /** @type {[number, number]} */
+    static ticknessRange = [0, 0];
+    /** @type {number} */
     static ticknessVariation = 0;
     //static vertexMovement = 0;
 
@@ -59,7 +64,8 @@ class Line {
     constructor(vertexA, vertexB) {
         this.vertexA = vertexA;
         this.vertexB = vertexB;
-        this.tickness = setRandomTickness();
+        /** @type {number} */
+        this.tickness = this.setRandomTickness();
     }
 
     /**
@@ -68,8 +74,8 @@ class Line {
      * @returns {number}
      */
     setRandomTickness() {
-        const range = Individual.ticknesRange[1] - Individual.ticknesRange[0];
-        return (Math.random() * range) + Individual.ticknesRange[0];
+        const range = Line.ticknessRange[1] - Line.ticknessRange[0];
+        return (Math.random() * range) + Line.ticknessRange[0];
     }
 
     /**
@@ -82,10 +88,12 @@ class Line {
         this.tickness += result;
     }
 
+    /*
     mutateVertex() {
         // Por definir
         // Opcional
     }
+    */
 
     /**
      * Returns the euclidian distance between the 2 vertex of the line
@@ -111,26 +119,29 @@ class Line {
         return new Vertex(x, y);
     }
 
-    setTicknessVariation(ticknessVariation) {
+    static setTicknessVariation(ticknessVariation) {
         Line.ticknessVariation = ticknessVariation;
     }
 
-    setVertexMovement(vertexMovement) {
+    /*
+    static setVertexMovement(vertexMovement) {
         Line.vertexMovement = vertexMovement;
     }
+    */
 
-    setTicknessRange(min, max) {
-        Line.ticknesRange = [min, max];
+    static setTicknessRange(range) {
+        Line.ticknessRange = range;
     }
 }
 
 /**
  * @class Individual
- * @typedef {Individual}
  */
 class Individual {
     // Rango de distancia entre puntos para hacer la linea
+    /** @type {[number, number]} */
     static distanceRange = [0, 0];
+    /** @type {number} */
     static quantLinesVariation = 0;
 
     /**
@@ -141,7 +152,9 @@ class Individual {
      */
     constructor(quantLines) {
         this.quantLines = quantLines;
+        /** @type {Line[]} */
         this.lines = [];
+        /** @type {number} */
         this.fitness = 0;
     }
 
@@ -243,18 +256,46 @@ class Individual {
         this.fitness = actualFitness;
     }
 
-    setDistanceRange(min, max) {
-        Individual.distanceRange = [min, max];
+    // ######################################################################################################
+    // ######################################################################################################
+    // ######################################################################################################
+    // ######################################################################################################
+    // Necesito import opencv para usar esto - help
+    convertToMat() {
+        // Crear una matriz en blanco
+        const mat = new cv.Mat(imageInformation.height, imageInformation.width, cv.CV_8UC3, [255, 255, 255]);
+
+        for (let i = 0; i < this.lines.length; i++) {
+            // Obtener info de la Linea
+            const lineInfo = this.lines[i];
+            const startV = new cv.Point(lineInfo.vertexA.x, lineInfo.vertexA.y);
+            const endV = new cv.Point(lineInfo.vertexB.x, lineInfo.vertexB.y);
+            const color = new cv.Scalar(0, 0, 0);
+            const tickness = lineInfo.tickness;
+
+            // Agregar linea a la matriz
+            cv.line(mat, startV, endV, color, tickness);
+        }
+
+        return mat;
+    }
+    // ######################################################################################################
+    // ######################################################################################################
+    // ######################################################################################################
+    // ######################################################################################################
+    // ######################################################################################################
+
+    static setDistanceRange(distance) {
+        Individual.distanceRange = distance;
     }
 
-    setQuantLinesVariation(variation) {
+    static setQuantLinesVariation(variation) {
         Individual.quantLinesVariation = variation;
     }
 }
 
 /**
  * @class Generation
- * @typedef {Generation}
  */
 class Generation {
     // Porcentajes y Rangos que comparten todas las generaciones
@@ -262,6 +303,7 @@ class Generation {
     static selectionPerGen = 0;
     static mutatePercentage = 0;
     static crossoverPercentage = 0;
+    /** @type {[number, number]} */
     static quantLinesRange = [0, 0];
     // Tiempo total del algoritmo
     static totalTime = 0;
@@ -274,26 +316,32 @@ class Generation {
      */
     constructor(id) {
         this.id = id;
+        /** @type {number} */
         this.genTime = 0;
+        /** @type {Individual[]} */
         this.population = [];
     }
 
+    /**
+     * Fills the population array with random Individuals
+     */
     createRandomPopulation() {
         for(let i = 0; i < Generation.populationPerGen; i++) {
             this.population.push(this.createRandomIndividual());
         }
     }
 
+    /**
+     * Creates an instance of the class Individual with random Lines
+     *
+     * @returns {Individual}
+     */
     createRandomIndividual() {
         const range = Generation.quantLinesRange[1] - Generation.quantLinesRange[0];
         const quantLines = Math.round((Math.random() * range) + Generation.quantLinesRange[0]);
         const individual = new Individual(quantLines);
         individual.randomLines();
         return individual;
-    }
-
-    pushIndividuals(individuals) {
-        this.population.concat(individuals);
     }
 
     calculateFitness() {
@@ -371,10 +419,25 @@ class Generation {
     }
 }
 
+/**
+ * @class VectorizeImage
+ */
 class VectorizeImage {
+    /**
+     * Creates an instance of VectorizeImage.
+     *
+     * @constructor
+     */
     constructor() {
+        /** @type {Generation[]} */
         this.generations = [];
+        /** @type {number} */
         this.maxGenerations = 0;
+    }
+
+    setMutationVariation(variation) {
+        Line.setTicknessVariation(variation);
+        Individual.setQuantLinesVariation(variation);
     }
 
     setImageInformation(width, height, pixels) {
@@ -400,6 +463,9 @@ class VectorizeImage {
         Line.setTicknessRange(tickness);
     }
 
+    /**
+     * Creates Generations until it vectorizes the image, or it reaches the max Gens const
+     */
     vectorize() {
         // Primera generacion
         // Tomar tiempo
@@ -411,7 +477,7 @@ class VectorizeImage {
         // Detener tiempo
         firstGen.genTime = time;
         Generation.addTotalTime(time);
-        while (!this.hasConverged() && this.getLastGen().id < this.maxGenerations) {
+        while (!this.hasConverged(this.getPixelsFromMat(this.getLastGen().getBest().convertToMat())) && this.getLastGen().id < this.maxGenerations) {
             // Nueva Generacion
             // Tomar tiempo
             time = 0;
@@ -428,14 +494,47 @@ class VectorizeImage {
         }
     }
 
-    hasConverged() {
-        // Por definir
-        // Aca creo que si habria que hacer una compracion de pixeles negros vs pixeles cubiertos por nuestras lineas.
-        return false;
+    hasConverged(best) {
+        let similarity = 0;
+        for (let row = 0; row < imageInformation.height; row++) {
+            for (let col = 0; col < imageInformation.width; col++) {
+                if (imageInformation.pixels[row][col] === best[row][col]) {
+                    similarity++;
+                }
+            }
+        }
+        similarity /= (imageInformation.width * imageInformation.height);
+        return similarity >= 0.675;
     }
 
     getLastGen() {
         return this.generations[this.generations.length - 1];
+    }
+
+    getPixelsFromMat(mat) {
+        // Recibe el Mat de OpenCV y devuelve la matriz con 0 - 255
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+
+        const matrix = [];
+
+        for (let y = 0; y < canvas.height; y++) {
+            const row = [];
+
+            for (let x = 0; x < canvas.width; x++) {
+                const index = (y * canvas.width + x) * 4;
+                const r = imageData[index];
+                const g = imageData[index + 1];
+                const b = imageData[index + 2];
+                const isBlack = r === 0 && g === 0 && b === 0;
+
+                row.push(isBlack ? 0 : 255);
+            }
+
+            matrix.push(row);
+        }
+        return matrix;
     }
 
     

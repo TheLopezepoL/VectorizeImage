@@ -47,7 +47,7 @@ class Line {
     // Cuanto puede variar el grosor y el angulo de las lineas
     static ticknesRange = [0, 0];
     static ticknessVariation = 0;
-    static vertexMovement = 0;
+    //static vertexMovement = 0;
 
     /**
      * Creates an instance of Line.
@@ -317,11 +317,12 @@ class Generation {
 
     crossover() {
         const cantidad = Math.round(this.population.length * (Generation.crossoverPercentage / 100));
-        const parentsGroupA = this.population.slice(0, cantidad / 2);
-        const parentsGroupB = this.population.slice(0, cantidad).reverse().slice(0, cantidad / 2);
+        const parentsGroupA = this.population.slice(0, cantidad);
+        const parentsGroupB = this.population.slice(0, cantidad).reverse();
         let children = [];
 
         for(let i = 0; i < parentsGroupA.length; i++) {
+            // Crear un hijo por pareja
             const parentA = parentsGroupA[i];
             const parentB = parentsGroupB[i];
             const quantLines = Math.round((parentA.quantLines + parentB.quantLines) / 2)

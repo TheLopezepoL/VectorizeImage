@@ -1,10 +1,9 @@
-
 // Informacion general de la imagen para que las clases tengan acceso
 const imageInformation = {};
 imageInformation.width = 0;
 imageInformation.height = 0;
 imageInformation.pixels = [];
-var Pruebamat;
+let Pruebamat;
 
 /**
  * @class Vertex
@@ -18,9 +17,7 @@ class Vertex {
      * @param {number} y
      */
     constructor(x, y) {
-        /** @type {number} */
         this.x = x;
-        /** @type {number} */
         this.y = y;
     }
 
@@ -54,6 +51,7 @@ class Line {
     static ticknessRange = [0, 0];
     /** @type {number} */
     static ticknessVariation = 0;
+
     //static vertexMovement = 0;
 
     /**
@@ -175,7 +173,7 @@ class Individual {
      *
      * @returns {Line}
      */
-    randomLine(width, height) {
+    randomLine() {
         // Crear un primer punto
         const x = Math.floor(Math.random() * imageInformation.width);
         const y = Math.floor(Math.random() * imageInformation.height);
@@ -188,7 +186,7 @@ class Individual {
         // Crear el segundo punto a una distancia k
         let p = 0;
         let q = 0;
-        do  {
+        do {
             const angle = Math.random() * 2 * Math.PI;
             p = Math.round(x + distance * Math.cos(angle));
             q = Math.round(y + distance * Math.sin(angle));
@@ -223,8 +221,7 @@ class Individual {
         for (let i = 0; i < Math.abs(result); i++) {
             if (result > 0) {
                 this.lines.push(this.randomLine());
-            }
-            else {
+            } else {
                 const randomIndex = Math.floor(Math.random * this.lines.length)
                 this.lines.splice(randomIndex, 1);
             }
@@ -258,35 +255,29 @@ class Individual {
         this.fitness = actualFitness;
     }
 
-    // ######################################################################################################
-    // ######################################################################################################
-    // ######################################################################################################
-    // ######################################################################################################
-    // Necesito import opencv para usar esto - help
-    convertToMat(width, height) {
-      // Crear una matriz en blanco
-      const mat = new cv.Mat(width, height, cv.CV_8UC3, [255, 255, 255, 255]);
-  
-      for (let i = 0; i < this.lines.length; i++) {
-          // Obtener info de la Linea
-          const lineInfo = this.lines[i];
-          const startV = new cv.Point(lineInfo.vertexA.x, lineInfo.vertexA.y);
-          const endV = new cv.Point(lineInfo.vertexB.x, lineInfo.vertexB.y);
-          const color = new cv.Scalar(0, 0, 0);
-          const tickness = lineInfo.tickness;
-  
-          // Agregar linea a la matriz
-          cv.line(mat, startV, endV, color, tickness);
-      }
-      cv.imshow('canvasOutput', mat);
-      Pruebamat = mat;
-      return mat;
+    /**
+     *
+     * @returns {cv.Mat}
+     */
+    convertToMat() {
+        // Crear una matriz en blanco
+        const mat = new cv.Mat(imageInformation.width, imageInformation.height, cv.CV_8UC3, [255, 255, 255, 255]);
+
+        for (let i = 0; i < this.lines.length; i++) {
+            // Obtener info de la Linea
+            const lineInfo = this.lines[i];
+            const startV = new cv.Point(lineInfo.vertexA.x, lineInfo.vertexA.y);
+            const endV = new cv.Point(lineInfo.vertexB.x, lineInfo.vertexB.y);
+            const color = new cv.Scalar(0, 0, 0);
+            const tickness = lineInfo.tickness;
+
+            // Agregar linea a la matriz
+            cv.line(mat, startV, endV, color, tickness);
+        }
+        cv.imshow('canvasOutput', mat);
+        Pruebamat = mat;
+        return mat;
     }
-    // ######################################################################################################
-    // ######################################################################################################
-    // ######################################################################################################
-    // ######################################################################################################
-    // ######################################################################################################
 
     static setDistanceRange(distance) {
         Individual.distanceRange = distance;
@@ -310,7 +301,7 @@ class Generation {
     static quantLinesRange = [0, 0];
     // Tiempo total del algoritmo
     static totalTime = 0;
-    
+
     /**
      * Creates an instance of Generation.
      *
@@ -329,7 +320,7 @@ class Generation {
      * Fills the population array with random Individuals
      */
     createRandomPopulation() {
-        for(let i = 0; i < Generation.populationPerGen; i++) {
+        for (let i = 0; i < Generation.populationPerGen; i++) {
             this.population.push(this.createRandomIndividual());
         }
     }
@@ -348,18 +339,18 @@ class Generation {
     }
 
     calculateFitness() {
-        for(let i = 0; i < this.population.length; i++) {
+        for (let i = 0; i < this.population.length; i++) {
             this.population[i].calculateFitness();
         }
-      }
-      
-      sortPopulation() {
-          this.population.sort((a, b) => b.fitness - a.fitness);
-        }
-        
-        getBest() {
-          return this.population[0];
-      }
+    }
+
+    sortPopulation() {
+        this.population.sort((a, b) => b.fitness - a.fitness);
+    }
+
+    getBest() {
+        return this.population[0];
+    }
 
     selectBestPopulation() {
         const cantidad = Math.round(this.population.length * (Generation.selectionPerGen / 100));
@@ -372,7 +363,7 @@ class Generation {
         const parentsGroupB = this.population.slice(0, cantidad).reverse();
         let children = [];
 
-        for(let i = 0; i < parentsGroupA.length; i++) {
+        for (let i = 0; i < parentsGroupA.length; i++) {
             // Crear un hijo por pareja
             const parentA = parentsGroupA[i];
             const parentB = parentsGroupB[i];
@@ -497,6 +488,12 @@ class VectorizeImage {
         }
     }
 
+    /**
+     * Checks if the best Individual completed the task
+     *
+     * @param best best Individual from Generation
+     * @returns {boolean}
+     */
     hasConverged(best) {
         let similarity = 0;
         for (let row = 0; row < imageInformation.height; row++) {
@@ -513,21 +510,26 @@ class VectorizeImage {
     getLastGen() {
         return this.generations[this.generations.length - 1];
     }
-    static setPixels(mat) {
-      let pixels = [];
-      for (let col = 0; col < imageInformation.width; col++) {
-        let rows = [];
-        for (let row = 0; row < imageInformation.height; row++) {
-          let uchar = mat.ucharPtr(col, row);
-          rows.push(uchar[0]);
-        }
-        pixels.push(rows);
-      }
-      console.log("Pixeles ", pixels);
-      return pixels;
-  }
 
-    
+    /**
+     * Gives a matrix with the pixels of a Mat Object
+     *
+     * @param mat The cv.mat Object
+     * @returns {number[][]}
+     */
+    static setPixels(mat) {
+        let pixels = [];
+        for (let col = 0; col < imageInformation.width; col++) {
+            let rows = [];
+            for (let row = 0; row < imageInformation.height; row++) {
+                let uchar = mat.ucharPtr(col, row);
+                rows.push(uchar[0]);
+            }
+            pixels.push(rows);
+        }
+        console.log("Pixeles ", pixels);
+        return pixels;
+    }
 }
 
 function loadImage() {
@@ -536,61 +538,59 @@ function loadImage() {
     const ctx = canvas.getContext('2d');
     const image = new Image();
 
-    image.onload = function() {
-      
-      canvas.width = image.width;
-      canvas.height = image.height;
-      imageInformation.width = image.width;
-      imageInformation.height = image.height;
+    image.onload = function () {
+
+        canvas.width = image.width;
+        canvas.height = image.height;
+        imageInformation.width = image.width;
+        imageInformation.height = image.height;
 
 
-      ctx.drawImage(image, 0, 0);
-      Matrix();
-      VectorizeImage.setRanges([8, 10],[2, 5],[1, 3]);
-      let gen =  new Generation(0);
-      gen.population.push(gen.createRandomIndividual());
-      gen.getBest().convertToMat(canvas.width, canvas.height);
-      VectorizeImage.setPixels(Pruebamat);
-      
-
+        ctx.drawImage(image, 0, 0);
+        Matrix();
+        VectorizeImage.setRanges([8, 10], [2, 5], [1, 3]);
+        let gen = new Generation(0);
+        gen.population.push(gen.createRandomIndividual());
+        gen.getBest().convertToMat();
+        VectorizeImage.setPixels(Pruebamat);
 
     };
 
     const file = fileInput.files[0];
     const reader = new FileReader();
-    reader.onload = function(e) {
-      image.src = e.target.result;
+    reader.onload = function (e) {
+        image.src = e.target.result;
     };
     reader.readAsDataURL(file);
-  }
+}
 
-  // Función para vectorizar la imagen y crear la matriz de puntos
-  function Matrix() {
+// Función para vectorizar la imagen y crear la matriz de puntos
+function Matrix() {
     const canvas = document.getElementById('canvas');
     const ctx = canvas.getContext('2d');
     const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
-    
+
     const matrix = [];
 
     for (let y = 0; y < canvas.height; y++) {
-      const row = [];
+        const row = [];
 
-      for (let x = 0; x < canvas.width; x++) {
-        const index = (y * canvas.width + x) * 4;
-        const r = imageData[index];
-        const g = imageData[index + 1];
-        const b = imageData[index + 2];
-        const isBlack = r === 0 && g === 0 && b === 0;
+        for (let x = 0; x < canvas.width; x++) {
+            const index = (y * canvas.width + x) * 4;
+            const r = imageData[index];
+            const g = imageData[index + 1];
+            const b = imageData[index + 2];
+            const isBlack = r === 0 && g === 0 && b === 0;
 
-        row.push(isBlack ? 0 : 255);
-      }
+            row.push(isBlack ? 0 : 255);
+        }
 
-      matrix.push(row);
+        matrix.push(row);
     }
     imageInformation.pixels = matrix;
     console.log(imageInformation.pixels);
     console.log(matrix); // Imprimir la matriz de puntos en la consola
-  }
+}
 
 
   

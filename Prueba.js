@@ -3,7 +3,7 @@ const imageInformation = {};
 imageInformation.width = 0;
 imageInformation.height = 0;
 imageInformation.pixels = [];
-let Pruebamat;
+//let Pruebamat;
 
 /**
  * @class Vertex
@@ -168,6 +168,12 @@ class Individual {
         }
     }
 
+    addLines(lines) {
+        for (let i = 0; i < lines.length; i++) {
+            this.lines.push(lines[i]);
+        }
+    }
+
     /**
      * Create a random Line
      *
@@ -207,8 +213,8 @@ class Individual {
         const linesPriority = Math.round(this.quantLines * 65 / 100);
         const linesFromA = parentA.lines.slice(0, linesPriority);
         const linesFromB = parentB.lines.slice(0, this.quantLines - linesPriority);
-        this.lines.concat(linesFromA);
-        this.lines.concat(linesFromB);
+        this.addLines(linesFromA);
+        this.addLines(linesFromB);
     }
 
     /**
@@ -216,7 +222,7 @@ class Individual {
      */
     mutateLines() {
         // Opcional
-        const range = this.quantLines * (Individual.quantLinesVariation / 100);
+        const range = this.lines.length * (Individual.quantLinesVariation / 100);
         const result = Math.floor(Math.random() * (2 * range + 1) - range);
         for (let i = 0; i < Math.abs(result); i++) {
             if (result > 0) {
@@ -235,7 +241,7 @@ class Individual {
     calculateFitness() {
         // Por definir - Este fitness es modificable
         let actualFitness = 0;
-        for (let i = 0; i < this.quantLines; i++) {
+        for (let i = 0; i < this.lines.length; i++) {
             const actualLine = this.lines[i];
             // +1 Punto si los puntos extremos se encuentran en una zona sombreada
             if (actualLine.vertexA.isInBlack()) {
@@ -251,7 +257,7 @@ class Individual {
         }
         // Esto lo hago con la idea de que tener + lineas sea un factor determinante. 
         // Lo que importa es que las que tenga esten bien.
-        actualFitness /= (4 * this.quantLines);
+        actualFitness /= (4 * this.lines.length);
         this.fitness = actualFitness;
     }
 
@@ -275,7 +281,7 @@ class Individual {
             cv.line(mat, startV, endV, color, tickness);
         }
         cv.imshow('canvasOutput', mat);
-        Pruebamat = mat;
+        //Pruebamat = mat;
         return mat;
     }
 
@@ -339,6 +345,7 @@ class Generation {
     }
 
     calculateFitness() {
+        console.log("Entra a fitness");
         for (let i = 0; i < this.population.length; i++) {
             this.population[i].calculateFitness();
         }
@@ -348,7 +355,14 @@ class Generation {
         this.population.sort((a, b) => b.fitness - a.fitness);
     }
 
+    addIndividuals(array) {
+        for (let i = 0; i < array.length; i++) {
+            this.population.push(array[i]);
+        }
+    }
+
     getBest() {
+        console.log("Pana: ", this.population[0]);
         return this.population[0];
     }
 
@@ -370,7 +384,10 @@ class Generation {
             const quantLines = Math.round((parentA.quantLines + parentB.quantLines) / 2)
             let son = new Individual(quantLines);
             son.crossover(parentA, parentB);
+            //let son2 = new Individual(quantLines);
+            //son2.crossover(parentB, parentA);
             children.push(son);
+            //children.push(son2);
         }
 
         return children;
@@ -382,7 +399,7 @@ class Generation {
 
         for (let i = 0; i < mutaded.length; i++) {
             // Esto es provisional pues aun no se como lo vamos a mutar
-            mutaded[i].mutateLines();
+            //mutaded[i].mutateLines();
         }
 
         return mutaded;
@@ -446,7 +463,7 @@ class VectorizeImage {
         Generation.setMutatePercentage(mutate);
     }
 
-    static setMaxGenerationsAndPopulation(generation, population) {
+    setMaxGenerationsAndPopulation(generation, population) {
         this.maxGenerations = generation;
         Generation.setPopulationPerGen(population);
     }
@@ -471,20 +488,26 @@ class VectorizeImage {
         // Detener tiempo
         firstGen.genTime = time;
         Generation.addTotalTime(time);
-        while (!this.hasConverged(this.getPixelsFromMat(this.getLastGen().getBest().convertToMat())) && this.getLastGen().id < this.maxGenerations) {
+        this.generations.push(firstGen);
+        while (!this.hasConverged(VectorizeImage.setPixels(this.getLastGen().getBest().convertToMat())) && this.getLastGen().id < this.maxGenerations) {
+            console.log("ID: ", this.getLastGen().id);
             // Nueva Generacion
             // Tomar tiempo
             time = 0;
             let lastGen = this.getLastGen();
             let newGen = new Generation(lastGen.id + 1);
-            newGen.population.concat(lastGen.selectBestPopulation());
-            newGen.population.concat(lastGen.crossover());
-            newGen.population.concat(lastGen.mutate());
+            newGen.addIndividuals(lastGen.selectBestPopulation());
+            newGen.addIndividuals(lastGen.crossover()); // Deberia randomizar el crossover
+            newGen.addIndividuals(lastGen.mutate());    // El mutate genera un error con las cant lineas
+            console.log("Agrego a new Gen", newGen);
             newGen.calculateFitness();
             newGen.sortPopulation();
+            console.log("Sorteado", newGen);
             // Detener tiempo
             newGen.genTime = time;
             Generation.addTotalTime(time);
+            // Agregar generacion
+            this.generations.push(newGen);
         }
     }
 
@@ -496,14 +519,19 @@ class VectorizeImage {
      */
     hasConverged(best) {
         let similarity = 0;
+        let total = 0;
         for (let row = 0; row < imageInformation.height; row++) {
             for (let col = 0; col < imageInformation.width; col++) {
-                if (imageInformation.pixels[row][col] === best[row][col]) {
-                    similarity++;
+                if (imageInformation.pixels[row][col] === 0) {
+                    total++;
+                    if (best[row][col] === 0) {
+                        similarity++;
+                    }
                 }
             }
         }
-        similarity /= (imageInformation.width * imageInformation.height);
+        similarity /= total;
+        console.log("Similarity: ", similarity);
         return similarity >= 0.675;
     }
 
@@ -527,7 +555,7 @@ class VectorizeImage {
             }
             pixels.push(rows);
         }
-        console.log("Pixeles ", pixels);
+        //console.log("Pixeles ", pixels);
         return pixels;
     }
 }
@@ -549,11 +577,19 @@ function loadImage() {
         ctx.drawImage(image, 0, 0);
         Matrix();
         VectorizeImage.setRanges([8, 10], [2, 5], [1, 3]);
-        let gen = new Generation(0);
+        /*let gen = new Generation(0);
         gen.population.push(gen.createRandomIndividual());
         gen.getBest().convertToMat();
-        VectorizeImage.setPixels(Pruebamat);
-
+        VectorizeImage.setPixels(Pruebamat);*/
+        let vectorizeImage = new VectorizeImage();
+        vectorizeImage.setMaxGenerationsAndPopulation(1000, 50);
+        VectorizeImage.setMutationVariation(15);
+        VectorizeImage.setPercentages(20,40,40);
+        vectorizeImage.vectorize();
+        console.log("Termino");
+        console.log(VectorizeImage.setPixels(vectorizeImage.getLastGen().getBest().convertToMat()));
+        console.log(vectorizeImage.getLastGen().getBest().fitness);
+        //console.log(vectorizeImage.getLastGen().id);
     };
 
     const file = fileInput.files[0];
@@ -588,8 +624,8 @@ function Matrix() {
         matrix.push(row);
     }
     imageInformation.pixels = matrix;
-    console.log(imageInformation.pixels);
-    console.log(matrix); // Imprimir la matriz de puntos en la consola
+    //console.log(imageInformation.pixels);
+    //console.log(matrix); // Imprimir la matriz de puntos en la consola
 }
 
 

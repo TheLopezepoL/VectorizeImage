@@ -3,6 +3,7 @@ const imageInformation = {};
 imageInformation.width = 0;
 imageInformation.height = 0;
 imageInformation.pixels = [];
+
 //let Pruebamat;
 
 /**
@@ -66,6 +67,12 @@ class Line {
         this.vertexB = vertexB;
         /** @type {number} */
         this.tickness = this.setRandomTickness();
+    }
+
+    copyLine() {
+        let copied = new Line(new Vertex(this.vertexA.x, this.vertexA.y), new Vertex(this.vertexB.x, this.vertexB.y));
+        copied.tickness = this.tickness;
+        return copied;
     }
 
     /**
@@ -158,6 +165,15 @@ class Individual {
         this.fitness = 0;
     }
 
+    copyIndividual() {
+        let copied = new Individual(this.quantLines);
+        for (let i = 0; i < this.lines.length; i++) {
+            copied.lines.push(this.lines[i].copyLine());
+        }
+        copied.fitness = this.fitness;
+        return copied;
+    }
+
     /**
      * Fill the lines array with random lines
      */
@@ -210,9 +226,18 @@ class Individual {
      * @param {Individual} parentB
      */
     crossover(parentA, parentB) {
-        const linesPriority = Math.round(this.quantLines * 65 / 100);
-        const linesFromA = parentA.lines.slice(0, linesPriority);
-        const linesFromB = parentB.lines.slice(0, this.quantLines - linesPriority);
+        const percentage = Math.random() * (70 - 50) + 50;
+        const linesPriority = Math.round(this.quantLines * percentage / 100);
+        const copylinesFromA = parentA.lines.slice(0, linesPriority);
+        let linesFromA = [];
+        for (let i = 0; i < copylinesFromA.length; i++) {
+            linesFromA.push(copylinesFromA[i].copyLine());
+        }
+        const copylinesFromB = parentB.lines.slice(0, this.quantLines - linesPriority);
+        let linesFromB = [];
+        for (let k = 0; k < copylinesFromB.length; k++) {
+            linesFromB.push(copylinesFromB[k].copyLine());
+        }
         this.addLines(linesFromA);
         this.addLines(linesFromB);
     }
@@ -221,15 +246,13 @@ class Individual {
      * Change the number of individual's lines
      */
     mutateLines() {
-        // Opcional
         const range = this.lines.length * (Individual.quantLinesVariation / 100);
         const result = Math.floor(Math.random() * (2 * range + 1) - range);
-        for (let i = 0; i < Math.abs(result); i++) {
-            if (result > 0) {
+        if (result < 0) {
+            this.lines.splice(0, result);
+        } else {
+            for (let i = 0; i < result; i++) {
                 this.lines.push(this.randomLine());
-            } else {
-                const randomIndex = Math.floor(Math.random * this.lines.length)
-                this.lines.splice(randomIndex, 1);
             }
         }
         this.quantLines = this.lines.length;
@@ -345,7 +368,6 @@ class Generation {
     }
 
     calculateFitness() {
-        console.log("Entra a fitness");
         for (let i = 0; i < this.population.length; i++) {
             this.population[i].calculateFitness();
         }
@@ -368,13 +390,26 @@ class Generation {
 
     selectBestPopulation() {
         const cantidad = Math.round(this.population.length * (Generation.selectionPerGen / 100));
-        return this.population.slice(0, cantidad);
+        const copyPopulation = this.population.slice(0, cantidad);
+        let bestPopulation = [];
+        for (let i = 0; i < copyPopulation.length; i++) {
+            bestPopulation.push(copyPopulation[i].copyIndividual());
+        }
+        return bestPopulation;
     }
 
     crossover() {
         const cantidad = Math.round(this.population.length * (Generation.crossoverPercentage / 100));
-        const parentsGroupA = this.population.slice(0, cantidad);
-        const parentsGroupB = this.population.slice(0, cantidad).reverse();
+        const copyParentsGroupA = this.population.slice(0, cantidad);
+        const copyParentsGroupB = this.population.slice(0, cantidad).reverse();
+        let parentsGroupA = [];
+        let parentsGroupB = [];
+        for (let i = 0; i < copyParentsGroupA.length; i++) {
+            parentsGroupA.push(copyParentsGroupA[i].copyIndividual());
+        }
+        for (let j = 0; j < copyParentsGroupB.length; j++) {
+            parentsGroupB.push(copyParentsGroupB[j].copyIndividual());
+        }
         let children = [];
 
         for (let i = 0; i < parentsGroupA.length; i++) {
@@ -395,11 +430,15 @@ class Generation {
 
     mutate() {
         const cantidad = Math.round(this.population.length * (Generation.mutatePercentage / 100));
-        const mutaded = this.population.slice(0, cantidad);
+        const copyMutaded = this.population.slice(0, cantidad);
+        let mutaded = [];
+        for (let i = 0; i < copyMutaded.length; i++) {
+            mutaded.push(copyMutaded[i].copyIndividual());
+        }
 
         for (let i = 0; i < mutaded.length; i++) {
             // Esto es provisional pues aun no se como lo vamos a mutar
-            //mutaded[i].mutateLines();
+            mutaded[i].mutateLines();
         }
 
         return mutaded;
@@ -497,12 +536,10 @@ class VectorizeImage {
             let lastGen = this.getLastGen();
             let newGen = new Generation(lastGen.id + 1);
             newGen.addIndividuals(lastGen.selectBestPopulation());
-            newGen.addIndividuals(lastGen.crossover()); // Deberia randomizar el crossover
+            newGen.addIndividuals(lastGen.crossover());
             newGen.addIndividuals(lastGen.mutate());    // El mutate genera un error con las cant lineas
-            console.log("Agrego a new Gen", newGen);
             newGen.calculateFitness();
             newGen.sortPopulation();
-            console.log("Sorteado", newGen);
             // Detener tiempo
             newGen.genTime = time;
             Generation.addTotalTime(time);
@@ -517,22 +554,30 @@ class VectorizeImage {
      * @param best best Individual from Generation
      * @returns {boolean}
      */
-    hasConverged(best) {
-        let similarity = 0;
-        let total = 0;
+    hasConverged(best) { // Pensar despues
+        let similarityBlacks = 0;
+        let totalBlacks = 0;
+        let similarityWhites = 0;
+        let totalWhites = 0;
         for (let row = 0; row < imageInformation.height; row++) {
             for (let col = 0; col < imageInformation.width; col++) {
                 if (imageInformation.pixels[row][col] === 0) {
-                    total++;
+                    totalBlacks++;
                     if (best[row][col] === 0) {
-                        similarity++;
+                        similarityBlacks++;
+                    }
+                } else {
+                    totalWhites++;
+                    if (best[row][col] !== 0) {
+                        similarityWhites++;
                     }
                 }
             }
         }
-        similarity /= total;
+        //
+        const similarity = similarityBlacks / totalBlacks;
         console.log("Similarity: ", similarity);
-        return similarity >= 0.675;
+        return similarity >= 1;
     }
 
     getLastGen() {
@@ -576,15 +621,15 @@ function loadImage() {
 
         ctx.drawImage(image, 0, 0);
         Matrix();
-        VectorizeImage.setRanges([8, 10], [2, 5], [1, 3]);
+        VectorizeImage.setRanges([20, 40], [3, 6], [1, 3]);
         /*let gen = new Generation(0);
         gen.population.push(gen.createRandomIndividual());
         gen.getBest().convertToMat();
         VectorizeImage.setPixels(Pruebamat);*/
         let vectorizeImage = new VectorizeImage();
-        vectorizeImage.setMaxGenerationsAndPopulation(1000, 50);
+        vectorizeImage.setMaxGenerationsAndPopulation(100, 108);
         VectorizeImage.setMutationVariation(15);
-        VectorizeImage.setPercentages(20,40,40);
+        VectorizeImage.setPercentages(20, 40, 40);
         vectorizeImage.vectorize();
         console.log("Termino");
         console.log(VectorizeImage.setPixels(vectorizeImage.getLastGen().getBest().convertToMat()));
@@ -625,7 +670,7 @@ function Matrix() {
     }
     imageInformation.pixels = matrix;
     //console.log(imageInformation.pixels);
-    //console.log(matrix); // Imprimir la matriz de puntos en la consola
+    console.log(matrix); // Imprimir la matriz de puntos en la consola
 }
 
 

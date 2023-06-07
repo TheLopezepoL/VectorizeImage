@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+  <link rel="stylesheet" href="ConfigurationStyle.css">
+  
+  </head>
+<body>
+  <div id="g" >
+    <div id="generations" > 
+      
+    <div id="originalImg"> 
+      <p>Imagen Original</p>
+      <canvas id="canvas" width =50 height=50 ></canvas>
+    </div> 
+      
+    <div id="generateImg">
+      <p>Imagen Resultante</p>
+      <canvas id="canvasOutput" width =50 height=50 ></canvas>
+    </div>
+      
+      
+    </div>
+    <button id="backbutton" onclick="back()">Volver a la configuracion</button>
+  </div>
+    
+    <div id="configurationContainer">
+        <h1>Configuración</h1>
+        <p> Cantidad maxima de generaciones</p>
+        <input type="text" id="maxGenerations" placeholder="0">
+
+        <p> Cantidad maxima de individuos por generacion</p>
+        <input type="text" id="maxIndividuals" placeholder="0">
+
+        <p></p>
+        <input type="file" id="fileInput" accept="image/*" >
+
+        
+        
+        
+        <p>Porcentaje de seleccion de individuos </p>
+        <input type="range" id="selectionPtr" min="0" max="100" value="0" oninput="updateValues(), seleccionPrc.innerText = this.value">
+        <p id="seleccionPrc"> 0 </p>
+
+        <p>Porcentaje de mutacion</p>
+        <input type="range" id="mutationPtr" min="0" max="100" value="0" oninput="updateValues(), mutacionPrc.innerText = this.value">
+        <p id="mutacionPrc"> 0 </p>
+
+        <p>Porcentaje de combinacion</p>
+        <input type="range" id="crossoverPtr" min="0" max="100" value="0" oninput="updateValues(), crossoverPrc.innerText = this.value">
+        <p id="crossoverPrc"> 0 </p>
+        
+        <p id="result"></p>
+
+        <button id="saveBtn" onclick="saveValues()" disabled>Guardar valores</button>
+
+    </div>
+    
+    <script async src="https://docs.opencv.org/3.4.0/opencv.js" type="text/javascript"></script>
+</body>
+<script type="text/javascript" src="Prueba.js"> </script>
+
+</html>

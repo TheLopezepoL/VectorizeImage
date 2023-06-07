@@ -627,7 +627,7 @@ function loadImage() {
         gen.population.push(gen.createRandomIndividual());
         gen.getBest().convertToMat();
         VectorizeImage.setPixels(Pruebamat);*/
-        let vectorizeImage = new VectorizeImage();
+        /*let vectorizeImage = new VectorizeImage();
         vectorizeImage.setMaxGenerationsAndPopulation(150, 108);
         VectorizeImage.setMutationVariation(15);
         VectorizeImage.setPercentages(20, 40, 40);
@@ -635,7 +635,7 @@ function loadImage() {
         console.log("Termino");
         console.log(VectorizeImage.setPixels(vectorizeImage.getLastGen().getBest().convertToMat()));
         console.log(vectorizeImage.getLastGen().getBest().fitness);
-        //console.log(vectorizeImage.getLastGen().id);
+        //console.log(vectorizeImage.getLastGen().id);*/
     };
 
     const file = fileInput.files[0];
@@ -673,6 +673,51 @@ function Matrix() {
     //console.log(imageInformation.pixels);
     console.log(matrix); // Imprimir la matriz de puntos en la consola
 }
+
+function updateValues() {
+    var selectionPtr = parseInt(document.getElementById("selectionPtr").value);
+    var mutationPtr = parseInt(document.getElementById("mutationPtr").value);
+    var crossoverPtr = parseInt(document.getElementById("crossoverPtr").value);
+  
+    
+    const sum = selectionPtr + mutationPtr + crossoverPtr;
+    if (sum === 100) {
+      document.getElementById("result").innerHTML = "La suma es igual a 100. ¡Valores válidos!";
+      document.getElementById("saveBtn").disabled = false;
+    } else {
+      document.getElementById("result").innerHTML = "La suma debe ser igual a 100. La suma actual es " + sum;
+      document.getElementById("saveBtn").disabled = true;
+    }
+  }
+  
+function saveValues() {
+    var selectionPtr = parseInt(document.getElementById("selectionPtr").value);
+    var mutationPtr = parseInt(document.getElementById("mutationPtr").value);
+    var crossoverPtr = parseInt(document.getElementById("crossoverPtr").value);
+    var maxGenerations = parseInt(document.getElementById("maxGenerations").value);
+    var maxIndividuals = parseInt(document.getElementById("maxIndividuals").value);
+    
+    var vectorizeImage = new VectorizeImage();
+    VectorizeImage.setMutationVariation(15);
+    VectorizeImage.setPercentages(selectionPtr,crossoverPtr,mutationPtr);
+    vectorizeImage.setMaxGenerationsAndPopulation(maxGenerations,maxIndividuals)
+    
+    console.log(selectionPtr,mutationPtr,crossoverPtr,maxGenerations,maxIndividuals);
+    document.getElementById("g").style.visibility = "visible"; 
+    document.getElementById("configurationContainer").style.visibility = "hidden"; 
+    vectorizeImage.vectorize();
+  }
+ 
+
+ function back(){
+    document.getElementById("g").style.visibility = "hidden"; 
+    document.getElementById("configurationContainer").style.visibility = "visible"; 
+ } 
+
+document.getElementById("fileInput").addEventListener('change', function (e) {
+    e.preventDefault();
+    loadImage()
+});  
 
 
   

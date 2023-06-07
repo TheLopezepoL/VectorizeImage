@@ -1,0 +1,30 @@
+body {
+    font-family: Arial, sans-serif;
+    background-image: url("background.jpg");
+    background-repeat: no-repeat;
+    background-size: cover;
+  }
+
+.container {
+    width: 800px;
+    margin: 100px auto;
+    padding: 20px;
+    font-size: x-large;
+    text-align: center;
+    border-radius: 10px;
+    /*box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);*/
+ }
+
+h1 {
+    color: #ffffff;
+}
+
+.button {
+    display: inline-block;
+    background-color: #4CAF50;
+    color: #fff;
+    padding: 10px 20px;
+    border-radius: 5px;
+    text-decoration: none;
+    margin-top: 20px;
+}

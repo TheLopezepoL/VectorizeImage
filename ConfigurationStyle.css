@@ -15,6 +15,9 @@ body{
   margin: 25px auto;
 }
 
+#g p{
+  color: white
+}
 #originalImg{
   margin: 10px auto;
 }

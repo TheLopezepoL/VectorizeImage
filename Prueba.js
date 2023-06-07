@@ -384,7 +384,7 @@ class Generation {
     }
 
     getBest() {
-        console.log("Pana: ", this.population[0]);
+        //console.log("Pana: ", this.population[0]);
         return this.population[0];
     }
 
@@ -518,21 +518,21 @@ class VectorizeImage {
      */
     vectorize() {
         // Primera generacion
-        // Tomar tiempo
-        let time = 0;
+        
+        let inicio = performance.now(); // Tomar tiempo
         let firstGen = new Generation(0);
         firstGen.createRandomPopulation();
         firstGen.calculateFitness();
         firstGen.sortPopulation();
-        // Detener tiempo
+        let fin = performance.now();// Detener tiempo
+        let time = fin - inicio;
         firstGen.genTime = time;
         Generation.addTotalTime(time);
         this.generations.push(firstGen);
         while (!this.hasConverged(VectorizeImage.setPixels(this.getLastGen().getBest().convertToMat())) && this.getLastGen().id < this.maxGenerations) {
-            console.log("ID: ", this.getLastGen().id);
+            //console.log("ID: ", this.getLastGen().id);
             // Nueva Generacion
-            // Tomar tiempo
-            time = 0;
+            let inicio = performance.now(); // Tomar tiempo
             let lastGen = this.getLastGen();
             let newGen = new Generation(lastGen.id + 1);
             newGen.addIndividuals(lastGen.selectBestPopulation());
@@ -540,8 +540,10 @@ class VectorizeImage {
             newGen.addIndividuals(lastGen.mutate());    // El mutate genera un error con las cant lineas
             newGen.calculateFitness();
             newGen.sortPopulation();
-            // Detener tiempo
+            let fin = performance.now(); // Detener tiempo
+            let time = fin - inicio;
             newGen.genTime = time;
+            //console.log(newGen.genTime)
             Generation.addTotalTime(time);
             // Agregar generacion
             this.generations.push(newGen);
@@ -671,7 +673,7 @@ function Matrix() {
     }
     imageInformation.pixels = matrix;
     //console.log(imageInformation.pixels);
-    console.log(matrix); // Imprimir la matriz de puntos en la consola
+    //console.log(matrix); // Imprimir la matriz de puntos en la consola
 }
 
 function updateValues() {
@@ -706,6 +708,10 @@ function saveValues() {
     document.getElementById("g").style.visibility = "visible"; 
     document.getElementById("configurationContainer").style.visibility = "hidden"; 
     vectorizeImage.vectorize();
+    console.log("Termino");
+    console.log("TotalTime: ", Generation.totalTime);
+    let time = convertTime(Generation.totalTime); 
+    document.getElementById("finalTime").innerText= "Tiempo final= " + time.minutos +":" + time.segundos + ":" + time.milisegundos;
   }
  
 
@@ -714,6 +720,22 @@ function saveValues() {
     document.getElementById("configurationContainer").style.visibility = "visible"; 
  } 
 
+
+ function convertTime(milisegundos) {
+    // Convertir milisegundos a segundos
+    var segundos = Math.floor(milisegundos / 1000);
+  
+    // Calcular los minutos y segundos
+    var minutos = Math.floor(segundos / 60);
+    segundos = segundos % 60;
+    milisegundos = milisegundos % 1000;
+  
+    return {
+      minutos: minutos,
+      segundos: segundos,
+      milisegundos: milisegundos  
+    };
+  }
 document.getElementById("fileInput").addEventListener('change', function (e) {
     e.preventDefault();
     loadImage()

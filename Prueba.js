@@ -557,8 +557,8 @@ class VectorizeImage {
     hasConverged(best) { // Pensar despues
         let similarityBlacks = 0;
         let totalBlacks = 0;
-        let similarityWhites = 0;
-        let totalWhites = 0;
+        //let similarityWhites = 0;
+        //let totalWhites = 0;
         for (let row = 0; row < imageInformation.height; row++) {
             for (let col = 0; col < imageInformation.width; col++) {
                 if (imageInformation.pixels[row][col] === 0) {
@@ -566,18 +566,19 @@ class VectorizeImage {
                     if (best[row][col] === 0) {
                         similarityBlacks++;
                     }
-                } else {
+                }
+                /*else {
                     totalWhites++;
                     if (best[row][col] !== 0) {
                         similarityWhites++;
                     }
-                }
+                }*/
             }
         }
         //
         const similarity = similarityBlacks / totalBlacks;
         console.log("Similarity: ", similarity);
-        return similarity >= 1;
+        return similarity >= 0.85;
     }
 
     getLastGen() {
@@ -621,13 +622,13 @@ function loadImage() {
 
         ctx.drawImage(image, 0, 0);
         Matrix();
-        VectorizeImage.setRanges([20, 40], [3, 6], [1, 3]);
+        VectorizeImage.setRanges([28, 38], [2,5], [1, 3]);
         /*let gen = new Generation(0);
         gen.population.push(gen.createRandomIndividual());
         gen.getBest().convertToMat();
         VectorizeImage.setPixels(Pruebamat);*/
         let vectorizeImage = new VectorizeImage();
-        vectorizeImage.setMaxGenerationsAndPopulation(100, 108);
+        vectorizeImage.setMaxGenerationsAndPopulation(150, 108);
         VectorizeImage.setMutationVariation(15);
         VectorizeImage.setPercentages(20, 40, 40);
         vectorizeImage.vectorize();

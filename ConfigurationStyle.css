@@ -1,18 +1,30 @@
+/*
+PY2 - Vectorizacion de imagenes
+Kevin Jiménez Molinares 2021475925
+Sebastián López Herrera 2019053591
+Josafat Badilla Rodríguez 2020257662
+*/
+
 body{
   font-family: Arial, sans-serif;
   background-image: url("background.jpg");
-  background-repeat: no-repeat;
   background-size: cover;
 }
 
+#grafico {
+  background-color: rgba(255,255,255); /* Color del fondo */
+  display: line;
+  align-self: center;
+}
+
 #g{
-  transform: scale(1.2);
+  
   width: 100%;
   text-align: center;
   position: absolute;
   visibility: hidden;
   align-items: center;
-  margin: 25px auto;
+  margin: 0px auto;
 }
 
 #g p{
@@ -34,6 +46,19 @@ body{
   color: white;
 }
 
+
+#finalResults{
+  margin: 0 auto;
+  width: 700px;
+  height: 550px;
+  border-radius: 10px;
+  opacity: 85%;
+  background-color: rgb(60, 163, 146);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-content: center;
+}
 #generations{
   display: flex;
   flex-direction: row;
@@ -73,18 +98,6 @@ body{
 canvas { 
   position: center;
 }
-
-
-/*#imgContainer{
-    position:static;
-    width: 50px;
-    height: 50px;
-    display: none;
-    /*overflow: auto; /* Activa la barra de desplazamiento 
-    border: 1px solid black;
-    background-color: white;
-} */
-
 
 
 /* Estilo para el rango del slider */

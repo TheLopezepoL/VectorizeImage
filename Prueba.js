@@ -1,3 +1,10 @@
+/*
+PY2 - Vectorizacion de imagenes
+Kevin Jiménez Molinares 2021475925
+Sebastián López Herrera 2019053591
+Josafat Badilla Rodríguez 2020257662
+*/
+
 // Informacion general de la imagen para que las clases tengan acceso
 const imageInformation = {};
 imageInformation.width = 0;
@@ -165,6 +172,12 @@ class Individual {
         this.fitness = 0;
     }
 
+    
+    /**
+     * Description copia a un individuo creando uno nuevo
+     *
+     * @returns {Individual}
+     */
     copyIndividual() {
         let copied = new Individual(this.quantLines);
         for (let i = 0; i < this.lines.length; i++) {
@@ -184,6 +197,12 @@ class Individual {
         }
     }
 
+    
+    /**
+     * Description añade lineas al individuo
+     *
+     * @param {*} lines
+     */
     addLines(lines) {
         for (let i = 0; i < lines.length; i++) {
             this.lines.push(lines[i]);
@@ -262,7 +281,7 @@ class Individual {
      * Set a number between 0 and 1 of the % of correctness of the Individual
      */
     calculateFitness() {
-        // Por definir - Este fitness es modificable
+        
         let actualFitness = 0;
         for (let i = 0; i < this.lines.length; i++) {
             const actualLine = this.lines[i];
@@ -314,6 +333,10 @@ class Individual {
 
     static setQuantLinesVariation(variation) {
         Individual.quantLinesVariation = variation;
+    }
+
+    getFitness(){
+        return this.fitness;
     }
 }
 
@@ -397,7 +420,12 @@ class Generation {
         }
         return bestPopulation;
     }
-
+    
+    /**
+     * Description cruza los individuos de una poblacion
+     *
+     * @returns {Individual[]}
+     */
     crossover() {
         const cantidad = Math.round(this.population.length * (Generation.crossoverPercentage / 100));
         const copyParentsGroupA = this.population.slice(0, cantidad);
@@ -419,15 +447,17 @@ class Generation {
             const quantLines = Math.round((parentA.quantLines + parentB.quantLines) / 2)
             let son = new Individual(quantLines);
             son.crossover(parentA, parentB);
-            //let son2 = new Individual(quantLines);
-            //son2.crossover(parentB, parentA);
             children.push(son);
-            //children.push(son2);
         }
 
         return children;
     }
 
+    /**
+     * Description muta los individuos de la generacion
+     *
+     * @returns {Individual[]}
+     */
     mutate() {
         const cantidad = Math.round(this.population.length * (Generation.mutatePercentage / 100));
         const copyMutaded = this.population.slice(0, cantidad);
@@ -437,11 +467,22 @@ class Generation {
         }
 
         for (let i = 0; i < mutaded.length; i++) {
-            // Esto es provisional pues aun no se como lo vamos a mutar
             mutaded[i].mutateLines();
         }
 
         return mutaded;
+    }
+
+    getId(){
+        return this.id;
+    }
+
+    getPopulation(){
+        return this.population;
+    }
+
+    getGenTime(){
+        return this.genTime;
     }
 
     static setPopulationPerGen(value) {
@@ -530,7 +571,6 @@ class VectorizeImage {
         Generation.addTotalTime(time);
         this.generations.push(firstGen);
         while (!this.hasConverged(VectorizeImage.setPixels(this.getLastGen().getBest().convertToMat())) && this.getLastGen().id < this.maxGenerations) {
-            //console.log("ID: ", this.getLastGen().id);
             // Nueva Generacion
             let inicio = performance.now(); // Tomar tiempo
             let lastGen = this.getLastGen();
@@ -543,7 +583,6 @@ class VectorizeImage {
             let fin = performance.now(); // Detener tiempo
             let time = fin - inicio;
             newGen.genTime = time;
-            //console.log(newGen.genTime)
             Generation.addTotalTime(time);
             // Agregar generacion
             this.generations.push(newGen);
@@ -587,6 +626,10 @@ class VectorizeImage {
         return this.generations[this.generations.length - 1];
     }
 
+    getGenerations(){
+        return this.generations;
+    }
+
     /**
      * Gives a matrix with the pixels of a Mat Object
      *
@@ -603,11 +646,15 @@ class VectorizeImage {
             }
             pixels.push(rows);
         }
-        //console.log("Pixeles ", pixels);
         return pixels;
     }
 }
 
+
+/**
+ * Description Carga la imagen en el canvas
+ * 
+ */
 function loadImage() {
     const fileInput = document.getElementById('fileInput');
     const canvas = document.getElementById('canvas');
@@ -625,19 +672,6 @@ function loadImage() {
         ctx.drawImage(image, 0, 0);
         Matrix();
         VectorizeImage.setRanges([28, 38], [2,5], [1, 3]);
-        /*let gen = new Generation(0);
-        gen.population.push(gen.createRandomIndividual());
-        gen.getBest().convertToMat();
-        VectorizeImage.setPixels(Pruebamat);*/
-        /*let vectorizeImage = new VectorizeImage();
-        vectorizeImage.setMaxGenerationsAndPopulation(150, 108);
-        VectorizeImage.setMutationVariation(15);
-        VectorizeImage.setPercentages(20, 40, 40);
-        vectorizeImage.vectorize();
-        console.log("Termino");
-        console.log(VectorizeImage.setPixels(vectorizeImage.getLastGen().getBest().convertToMat()));
-        console.log(vectorizeImage.getLastGen().getBest().fitness);
-        //console.log(vectorizeImage.getLastGen().id);*/
     };
 
     const file = fileInput.files[0];
@@ -648,7 +682,12 @@ function loadImage() {
     reader.readAsDataURL(file);
 }
 
-// Función para vectorizar la imagen y crear la matriz de puntos
+
+
+/**
+ * Description Crear la matriz de puntos
+ * 
+ */
 function Matrix() {
     const canvas = document.getElementById('canvas');
     const ctx = canvas.getContext('2d');
@@ -676,6 +715,11 @@ function Matrix() {
     //console.log(matrix); // Imprimir la matriz de puntos en la consola
 }
 
+
+/**
+ * Description Actualiza los valores al seleccionar los porcentages
+ * @date 6/7/2023 - 7:52:27 PM
+ */
 function updateValues() {
     var selectionPtr = parseInt(document.getElementById("selectionPtr").value);
     var mutationPtr = parseInt(document.getElementById("mutationPtr").value);
@@ -684,14 +728,19 @@ function updateValues() {
     
     const sum = selectionPtr + mutationPtr + crossoverPtr;
     if (sum === 100) {
-      document.getElementById("result").innerHTML = "La suma es igual a 100. ¡Valores válidos!";
+      document.getElementById("result").innerHTML = "La suma es igual a 100%. ¡Valores válidos!";
       document.getElementById("saveBtn").disabled = false;
     } else {
-      document.getElementById("result").innerHTML = "La suma debe ser igual a 100. La suma actual es " + sum;
+      document.getElementById("result").innerHTML = "La suma debe ser igual a 100%. La suma actual es " + sum +" %";
       document.getElementById("saveBtn").disabled = true;
     }
-  }
+}
   
+
+/**
+ * Description Guarda los valores de la configuracion e inicia las generaciones
+ * 
+ */
 function saveValues() {
     var selectionPtr = parseInt(document.getElementById("selectionPtr").value);
     var mutationPtr = parseInt(document.getElementById("mutationPtr").value);
@@ -711,16 +760,40 @@ function saveValues() {
     console.log("Termino");
     console.log("TotalTime: ", Generation.totalTime);
     let time = convertTime(Generation.totalTime); 
-    document.getElementById("finalTime").innerText= "Tiempo final= " + time.minutos +":" + time.segundos + ":" + time.milisegundos;
+    let avgTime = calculateAvgTime(vectorizeImage);
+    document.getElementById("avgTime").innerText= "Tiempo Promedio= " + avgTime.minutos +"m:" + avgTime.segundos + "s:" + avgTime.milisegundos +"ms";
+    document.getElementById("finalTime").innerText= "Tiempo final= " + time.minutos +"m:" + time.segundos + "s:" + time.milisegundos +"ms";
+    createGraphic(vectorizeImage);
   }
  
 
- function back(){
-    document.getElementById("g").style.visibility = "hidden"; 
-    document.getElementById("configurationContainer").style.visibility = "visible"; 
- } 
 
 
+ /**
+  * Description Calcula el tiempo promedio de las generaciones
+  *
+  * @param {VectorizeImage} vectorizeImage
+  * @returns {{ minutos: number; segundos: number; milisegundos: number; }}
+  */
+ function calculateAvgTime(vectorizeImage){
+    var times= [];
+    var generations = vectorizeImage.getGenerations();
+    for (let i= 0 ; i < generations.length; i++){
+        times.push(generations[i].getGenTime());
+    }
+
+    let avgTime = calculateAverage(times);
+    return convertTime(avgTime);
+ }
+
+
+ 
+ /**
+  * Description Convierte los milisengundos a minutos, segundos y milisegundos
+  *
+  * @param {number} milisegundos
+  * @returns {{ minutos: number; segundos: number; milisegundos: number; }}
+  */
  function convertTime(milisegundos) {
     // Convertir milisegundos a segundos
     var segundos = Math.floor(milisegundos / 1000);
@@ -736,6 +809,92 @@ function saveValues() {
       milisegundos: milisegundos  
     };
   }
+
+/**
+ * Description placeholder
+ *
+ * @param {number[]} array
+ * @returns {number} Promedio del arreglo
+ */
+function calculateAverage(array) {
+    var suma = 0;
+    var cantidadElementos = array.length;
+  
+    // Suma todos los elementos del array
+    for (var i = 0; i < cantidadElementos; i++) {
+      suma += array[i];
+    }
+  
+    // Calcula el promedio dividiendo la suma total por la cantidad de elementos
+    var promedio = suma / cantidadElementos;
+  
+    return promedio;
+  }
+
+
+/**
+ * Description placeholder
+ *
+ * @param {VectorizeImage} vectorizeImage
+ */
+
+function createGraphic(vectorizeImage){
+    var generationsIds= [];
+    var bestFitness= [];
+    var avgFitness = [];
+    var generations = vectorizeImage.getGenerations()
+    
+    for (let i= 0 ; i < generations.length; i++){
+        let fitnesess= [];
+        let population = generations[i].getPopulation();
+        for (let j= 0; j < population.length; j++){
+            fitnesess.push(population[j].getFitness())
+        }
+        avgFitness.push(calculateAverage(fitnesess));
+        generationsIds.push(generations[i].getId());
+        bestFitness.push(generations[i].getBest().getFitness());
+    }
+    
+    
+
+    var datos = {
+        labels: generationsIds,
+        datasets: [{
+          label: 'BestFitness',
+          data: bestFitness,
+          fill: false,
+          borderColor: 'rgba(54, 162, 235, 1)',
+          borderWidth: 2
+        }, {
+            label: 'AverageFitness',
+            data: avgFitness,
+            fill: false,
+            borderColor: 'rgba(122, 255, 235, 1)',
+            borderWidth: 2
+          },]
+      };
+  
+      // Opciones del gráfico
+      var opciones = {
+        plugins: {
+            drawBackground: {
+              color: 'rgb(255, 255, 255)' // Color del fondo
+            }
+          },
+        responsive: false,
+        maintainAspectRatio: false
+      };
+  
+      // Crear el gráfico
+      var ctx = document.getElementById('grafico').getContext('2d');
+      var grafico = new Chart(ctx, {
+        type: 'line',
+        data: datos,
+        options: opciones
+      });
+
+}  
+
 document.getElementById("fileInput").addEventListener('change', function (e) {
     e.preventDefault();
     loadImage()
